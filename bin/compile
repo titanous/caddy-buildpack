@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# usage: bin/compile <build-dir> <cache-dir> <env-dir>
+
+set -eo pipefail
+
+mkdir -p "$1" "$2"
+build="$(cd "$1/" && pwd)"
+cache="$(cd "$2/" && pwd)"
+env_dir="$3"
+default_version="v0.8.3"
+version="$(cat "${env_dir}/CADDY_VERSION" 2>/dev/null || true)"
+version="${version:-$default_version}"
+cachefile="caddy-${version}"
+default_url="https://github.com/mholt/caddy/releases/download/${version}/caddy_linux_amd64.tar.gz"
+url="$(cat "${env_dir}/CADDY_URL" 2>/dev/null || true)"
+url="${url:-$default_url}"
+steptxt="----->"
+
+step() {
+    echo "$steptxt $@"
+}
+
+start() {
+    echo -n "$steptxt $@... "
+}
+
+finished() {
+    echo "done"
+}
+
+if [ ! -f "${cache}/${cachefile}" ]; then
+  cd "${cache}"
+  rm -f "${cache}/caddy-*"
+  start "Downloading Caddy ${version}"
+    curl -sL "${url}" | tar xz caddy_linux_amd64
+    mv caddy_linux_amd64 "${cachefile}"
+  finished
+else
+  step "Using cached Caddy ${version}"
+fi
+
+cd "${build}"
+mkdir -p bin
+cp "${cache}/${cachefile}" bin/caddy
