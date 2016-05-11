@@ -4,5 +4,5 @@
 cat <<EOF
 ---
 default_process_types:
-  web: bin/caddy -port \$PORT
+  web: bin/caddy -port \$PORT -log stdout
 EOF
